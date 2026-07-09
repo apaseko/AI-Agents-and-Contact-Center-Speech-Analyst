@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# IDE / Editor logs and configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+nosetests.xml
+shelve.out
+
+# Project-specific temporary and data folders
+temp/
+test_data/
+
+# OS-specific files
+.DS_Store
+Thumbs.db

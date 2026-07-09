@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  api-backend:
+    build: .
+    container_name: mtbank-api-backend
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+      # Монтируем кэш моделей whisper, чтобы не скачивать их заново при перезапуске контейнера
+      - whisper-cache:/root/.cache/huggingface
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+
+  pipelines:
+    image: ghcr.io/open-webui/pipelines:main
+    container_name: mtbank-pipelines
+    ports:
+      - "9099:9099"
+    volumes:
+      # Монтируем наш pipeline.py в папку /app/pipelines контейнера pipelines
+      - ./pipeline.py:/app/pipelines/pipeline.py
+      # Общая папка для пайплайнов
+      - pipelines-data:/app/pipelines
+      # Доступ к загруженным файлам OpenWebUI напрямую с диска (read-only)
+      - openwebui-data:/app/backend/data:ro
+    env_file:
+      - .env
+    environment:
+      - PIPELINES_DIR=/app/pipelines
+      - PIPELINES_API_KEY=dummy_key_for_pipelines
+    depends_on:
+      - api-backend
+    restart: always
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: mtbank-openwebui
+    ports:
+      - "${OPENWEBUI_PORT:-3000}:8080"
+    volumes:
+      - openwebui-data:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URL=http://pipelines:9099/v1
+      - OPENAI_API_KEY=dummy_key_for_pipelines
+      # Отключаем регистрацию новых пользователей (для безопасности демо-стенда) или делаем ее локальной
+      - WEBUI_AUTH=true
+    depends_on:
+      - pipelines
+    restart: always
+
+volumes:
+  whisper-cache:
+  pipelines-data:
+  openwebui-data:
