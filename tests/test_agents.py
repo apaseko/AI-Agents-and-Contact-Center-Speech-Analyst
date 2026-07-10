@@ -36,17 +36,26 @@ async def test_classifier_agent_success():
 @pytest.mark.asyncio
 async def test_classifier_agent_fallback():
     """
-    Проверка работы Classifier при некорректном ответе от LLM.
+    Проверка работы Classifier при некорректном ответе от LLM (умный fallback).
     """
     agent = ClassifierAgent(api_key="test_key")
     
-    # Мокаем вызов LLM, возвращающий невалидный JSON
+    # 1. Проверяем умный fallback по тексту о кредитах
     with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_call:
         mock_call.side_effect = Exception("LLM connection error")
         result = await agent.run(MOCK_TRANSCRIPT)
         
-        assert result["topic"] == "другое"
-        assert result["priority"] == "low"
+        assert result["topic"] == "кредиты"
+        assert result["priority"] == "medium"
+        
+    # 2. Проверяем дефолтный fallback на простом тексте
+    empty_transcript = [{"speaker": "Клиент", "start": 0.0, "end": 1.0, "text": "Просто привет."}]
+    with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_call:
+        mock_call.side_effect = Exception("LLM connection error")
+        result_empty = await agent.run(empty_transcript)
+        
+        assert result_empty["topic"] == "другое"
+        assert result_empty["priority"] == "low"
 
 @pytest.mark.asyncio
 async def test_quality_agent_success():
