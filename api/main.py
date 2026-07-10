@@ -78,6 +78,7 @@ async def download_file_to_temp(url: str, filename: str) -> str:
     """
     Скачивает файл по ссылке во временную директорию.
     """
+    os.makedirs(TEMP_DIR, exist_ok=True)
     temp_path = os.path.join(TEMP_DIR, filename)
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -149,7 +150,8 @@ async def analyze(
         elif "multipart/form-data" in content_type:
             # Читаем multipart форму
             if file:
-                # Сохраняем загруженный файл во временную директорию
+                # Гарантируем наличие временной папки перед сохранением файла
+                os.makedirs(TEMP_DIR, exist_ok=True)
                 safe_filename = f"uploaded_{os.urandom(4).hex()}_{file.filename}"
                 audio_path = os.path.join(TEMP_DIR, safe_filename)
                 logger.info(f"Сохранение загруженного файла во временный путь: {audio_path}")
