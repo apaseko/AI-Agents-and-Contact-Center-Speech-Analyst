@@ -53,7 +53,23 @@ services:
       - pipelines
     restart: always
 
+  caddy:
+    image: caddy:latest
+    container_name: mtbank-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    command: caddy reverse-proxy --from 178-172-136-94.sslip.io --to openwebui:8080
+    depends_on:
+      - openwebui
+    restart: always
+
 volumes:
   whisper-cache:
   pipelines-data:
   openwebui-data:
+  caddy-data:
+  caddy-config:
